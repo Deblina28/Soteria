@@ -42,7 +42,130 @@ void setup() {
 
 xTaskCreatePinnedToCore(publish,
       "t1",
+      10000,  #include <ESP32Servo.h>
+
+//Servo myservo;
+#include <MQ135.h>
+#include "DHTStable.h"
+#include <Arduino.h>
+ #include <WiFi.h>
+#include <Firebase_ESP_Client.h>
+
+#include "addons/TokenHelper.h"
+#include "addons/RTDBHelper.h"
+
+
+#define WIFI_SSID "JioFiber-2"
+#define WIFI_PASSWORD "90519051"
+
+#define API_KEY "AIzaSyAJiAkNj228ykq_xEkXCGfdQ2uFnfcsidw"
+#define DATABASE_URL "https://airguard-b76e2-default-rtdb.firebaseio.com/"
+ 
+DHTStable DHT;
+MQ135 mq135_sensor(33);
+
+
+#define DHT11_PIN       14
+
+float temp = 0.0, humid = 0.0, aqi = -.0;
+long ls = 0;
+boolean signupOK=false;
+int pingPin = 13;
+FirebaseData fbdo;
+
+FirebaseAuth auth;
+FirebaseConfig config;
+
+TaskHandle_t t1;
+TaskHandle_t t2;
+
+void setup() {
+
+  Serial.begin(115200);
+
+  pinMode(34, OUTPUT);
+  pinMode(35, OUTPUT);
+ 
+  setupbase();
+
+xTaskCreatePinnedToCore(publish,
+      "t1",
       10000,  
+      NULL,  
+      0,  /* Priority of the task */
+      &t1,  /* Task handle. */
+      0); /* Core where the task should run */
+     
+  xTaskCreatePinnedToCore(runbot,
+      "t1",
+      10000,  
+      NULL,  
+      0,  /* Priority of the task */
+      &t2,  /* Task handle. */
+      0); /* Core where the task should run */
+ 
+ /* Serial.print(humid);
+  Serial.print("  ");
+  Serial.print(temp);
+  Serial.print(" ");
+  Serial.println(aqi);*/
+void runbot(void *pv)
+{
+for(;;)
+{
+  pinMode(pingPin, OUTPUT);
+  digitalWrite(pingPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(pingPin, HIGH);
+  delayMicroseconds(5);
+  digitalWrite(pingPin, LOW);
+
+  pinMode(pingPin, INPUT);
+long  duration = pulseIn(pingPin, HIGH);
+
+  long d = duration / 29 / 2;
+
+  Serial.print(d);
+  Serial.println("CM");
+
+  if(d<30)
+  {
+    stp();
+   
+
+  else
+  fwd();
+ 
+  delay(100);
+}
+}
+
+void fwd()
+{
+  stp();
+  digitalWrite(34, HIGH);
+  digitalWrite(35, HIGH);
+}
+
+void stp()
+{
+  digitalWrite(34, LOW);
+  digitalWrite(35, LOW);
+}
+
+void left()
+{
+  stp();
+  digitalWrite(34, HIGH);
+  digitalWrite(35, LOW);
+}
+
+void rit()
+{
+  stp();
+  digitalWrite(34, LOW);
+  digitalWrite(35, HIGH);
+}
       NULL,  
       0,  /* Priority of the task */
       &t1,  /* Task handle. */
