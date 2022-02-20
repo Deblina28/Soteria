@@ -190,7 +190,7 @@ for(;;)
  dist=caldist();
  myservo.write(90);
  
-if(dist<20)
+if(dist<35)
 {
 stp();
 delay(2000);
@@ -200,7 +200,7 @@ for(int i=0;i<100;i++)
 rdist+=caldist();
 
 rdist/=100;
-delay(1000);
+delay(1500);
 
 
 myservo.write(00);
@@ -209,18 +209,18 @@ for(int i=0;i<100;i++)
 ldist+=caldist();
 
 ldist/=100;
-delay(1000);
+delay(1500);
 
-if(ldist>rdist)
+if(ldist<rdist)
 {
 left();
-delay(1000);
+delay(1500);
 }
 
 else
 {
 rit();
-delay(1000);
+delay(1500);
 }
 
 }
@@ -279,4 +279,3 @@ long caldist()
 
   return duration / 29 / 2;
 }
-
