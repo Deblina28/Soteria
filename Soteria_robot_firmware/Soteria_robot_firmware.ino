@@ -1,50 +1,6 @@
-//#include <ESP32Servo.h>
+#include <ESP32Servo.h>
 
-//Servo myservo;
-#include <MQ135.h>
-#include "DHTStable.h"
-#include <Arduino.h>
- #include <WiFi.h>
-#include <Firebase_ESP_Client.h>
-
-#include "addons/TokenHelper.h"
-#include "addons/RTDBHelper.h"
-
-
-#define WIFI_SSID "JioFiber-2"
-#define WIFI_PASSWORD "90519051"
-
-#define API_KEY "AIzaSyAJiAkNj228ykq_xEkXCGfdQ2uFnfcsidw"
-#define DATABASE_URL "https://airguard-b76e2-default-rtdb.firebaseio.com/"
- 
-DHTStable DHT;
-MQ135 mq135_sensor(33);
-
-
-#define DHT11_PIN       14
-
-float temp = 0.0, humid = 0.0, aqi = -.0;
-long ls = 0;
-boolean signupOK=false;
-
-FirebaseData fbdo;
-
-FirebaseAuth auth;
-FirebaseConfig config;
-
-TaskHandle_t t1;
-TaskHandle_t t2;
-
-void setup() {
-
-  Serial.begin(115200);
-  setupbase();
-
-xTaskCreatePinnedToCore(publish,
-      "t1",
-      10000,  #include <ESP32Servo.h>
-
-//Servo myservo;
+Servo myservo;
 #include <MQ135.h>
 #include "DHTStable.h"
 #include <Arduino.h>
@@ -78,15 +34,24 @@ FirebaseConfig config;
 
 TaskHandle_t t1;
 TaskHandle_t t2;
-
+int lf=32, rt=25;
 void setup() {
 
   Serial.begin(115200);
 
-  pinMode(34, OUTPUT);
-  pinMode(35, OUTPUT);
+  pinMode(lf, OUTPUT);
+  pinMode(rt, OUTPUT);
  
   setupbase();
+
+  ESP32PWM::allocateTimer(0);
+  ESP32PWM::allocateTimer(1);
+  ESP32PWM::allocateTimer(2);
+  ESP32PWM::allocateTimer(3);
+  myservo.setPeriodHertz(50);    // standard 50 hz servo
+  myservo.attach(27, 1000, 2000); 
+
+  
 
 xTaskCreatePinnedToCore(publish,
       "t1",
@@ -100,89 +65,18 @@ xTaskCreatePinnedToCore(publish,
       "t1",
       10000,  
       NULL,  
-      0,  /* Priority of the task */
+      1,  /* Priority of the task */
       &t2,  /* Task handle. */
       0); /* Core where the task should run */
  
- /* Serial.print(humid);
-  Serial.print("  ");
-  Serial.print(temp);
-  Serial.print(" ");
-  Serial.println(aqi);*/
-void runbot(void *pv)
-{
-for(;;)
-{
-  pinMode(pingPin, OUTPUT);
-  digitalWrite(pingPin, LOW);
-  delayMicroseconds(2);
-  digitalWrite(pingPin, HIGH);
-  delayMicroseconds(5);
-  digitalWrite(pingPin, LOW);
-
-  pinMode(pingPin, INPUT);
-long  duration = pulseIn(pingPin, HIGH);
-
-  long d = duration / 29 / 2;
-
-  Serial.print(d);
-  Serial.println("CM");
-
-  if(d<30)
-  {
-    stp();
-   
-
-  else
-  fwd();
- 
-  delay(100);
-}
-}
-
-void fwd()
-{
-  stp();
-  digitalWrite(34, HIGH);
-  digitalWrite(35, HIGH);
-}
-
-void stp()
-{
-  digitalWrite(34, LOW);
-  digitalWrite(35, LOW);
-}
-
-void left()
-{
-  stp();
-  digitalWrite(34, HIGH);
-  digitalWrite(35, LOW);
-}
-
-void rit()
-{
-  stp();
-  digitalWrite(34, LOW);
-  digitalWrite(35, HIGH);
-}
-      NULL,  
-      0,  /* Priority of the task */
-      &t1,  /* Task handle. */
-      0); /* Core where the task should run */
-     
-  xTaskCreatePinnedToCore(runbot,
-      "t1",
-      10000,  
-      NULL,  
-      0,  /* Priority of the task */
-      &t2,  /* Task handle. */
-      0); /* Core where the task should run */
-  pinMode(15, OUTPUT);
-  pinMode(2, OUTPUT);
   // put your setup code here, to run once:
 
+
+  
+
 }
+
+
 
 void setupbase()
 {
@@ -222,6 +116,7 @@ void setupbase()
 
 void loop() {
 
+
  DHT.read11(DHT11_PIN);
  
   humid = DHT.getHumidity();
@@ -232,11 +127,11 @@ void loop() {
 
 
 
-  Serial.print(humid);
+ /* Serial.print(humid);
   Serial.print("  ");
   Serial.print(temp);
   Serial.print(" ");
-  Serial.println(aqi);
+  Serial.println(aqi);*/
 
 delay(500);
   // put your main code here, to run repeatedly:
@@ -287,3 +182,101 @@ void publish(void *pv)
   }
 }
 }
+long dist=0, ldist=0, rdist=0;
+void runbot(void *pv)
+{
+for(;;)
+{
+ dist=caldist();
+ myservo.write(90);
+ 
+if(dist<20)
+{
+stp();
+delay(2000);
+myservo.write(180);
+rdist=0;
+for(int i=0;i<100;i++)
+rdist+=caldist();
+
+rdist/=100;
+delay(1000);
+
+
+myservo.write(00);
+ldist=0;
+for(int i=0;i<100;i++)
+ldist+=caldist();
+
+ldist/=100;
+delay(1000);
+
+if(ldist>rdist)
+{
+left();
+delay(1000);
+}
+
+else
+{
+rit();
+delay(1000);
+}
+
+}
+
+else 
+fwd();
+  Serial.print(dist);
+  Serial.println("CM");
+
+ 
+ 
+  delay(100);
+}
+}
+
+void fwd()
+{
+ 
+  digitalWrite(lf, HIGH);
+  digitalWrite(rt, HIGH);
+}
+
+void stp()
+{
+  digitalWrite(lf, LOW);
+  digitalWrite(rt, LOW);
+}
+
+void left()
+{
+  stp();
+  delay(100);
+  digitalWrite(rt, HIGH);
+  digitalWrite(lf, LOW);
+}
+
+void rit()
+{
+  stp();
+  delay(100);
+  digitalWrite(rt, LOW);
+  digitalWrite(lf, HIGH);
+}
+
+long caldist()
+{
+   pinMode(pingPin, OUTPUT);
+  digitalWrite(pingPin, LOW);
+  delayMicroseconds(2);
+  digitalWrite(pingPin, HIGH);
+  delayMicroseconds(5);
+  digitalWrite(pingPin, LOW);
+
+  pinMode(pingPin, INPUT);
+  long  duration = pulseIn(pingPin, HIGH);
+
+  return duration / 29 / 2;
+}
+
