@@ -11,11 +11,11 @@ Servo myservo;
 #include "addons/RTDBHelper.h"
 
 
-#define WIFI_SSID "JioFiber-2"
+#define WIFI_SSID "WifiSSID"
 #define WIFI_PASSWORD "90519051"
 
-#define API_KEY "AIzaSyAJiAkNj228ykq_xEkXCGfdQ2uFnfcsidw"
-#define DATABASE_URL "https://airguard-b76e2-default-rtdb.firebaseio.com/"
+#define API_KEY "Your API key"
+#define DATABASE_URL "Your database URL"
  
 DHTStable DHT;
 MQ135 mq135_sensor(33);
